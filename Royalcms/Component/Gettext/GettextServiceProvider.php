@@ -1,18 +1,17 @@
-<?php namespace Royalcms\Component\Gettext;
+<?php 
+
+namespace Royalcms\Component\Gettext;
 
 use Royalcms\Component\Support\ServiceProvider;
 
-/**
- * Laravel gettext main service provider
- */
-class LaravelGettextServiceProvider extends ServiceProvider
+class GettextServiceProvider extends ServiceProvider
 {
     /**
      * Indicates if loading of the provider is deferred.
      *
      * @var bool
      */
-    protected $defer = false;
+    protected $defer = true;
 
     /**
      * Bootstrap the application events.
@@ -20,54 +19,27 @@ class LaravelGettextServiceProvider extends ServiceProvider
      * @return void
      */
     public function boot()
-    {}
+    {
+    }
 
     /**
      * Register the service provider.
      *
-     * @return mixed
+     * @return void
      */
     public function register()
     {
-        $this->royalcms->bind('Adapters/AdapterInterface', 'Adapters/RoyalcmsAdapter');
-
-        // Main class register 
-        $this->royalcms['gettext'] = $this->royalcms->share(function ($royalcms) {
-
-            $configuration = Config\ConfigManager::create();
-
-            $fileSystem = new FileSystem($configuration->get(), app_path(), storage_path());
-
-            $gettext = new RoyalcmsGettext(
-                $configuration->get(),
-                new Session\SessionHandler,
-                new Adapters\RoyalcmsAdapter,
-                $fileSystem
-            );
-
-            return new Gettext($gettext);
+        $this->royalcms->singleton('gettext', function ($royalcms) {
+            $locale = new Locale();
+            $textdomain = new TextdomainManager($locale);
+            return new Gettext($royalcms, $textdomain);
         });
 
-        // Auto alias 
         $this->royalcms->booting(function () {
             $loader = \Royalcms\Component\Foundation\AliasLoader::getInstance();
-            $loader->alias('Gettext',
-                'Royalcms\Component\Gettext\Facades\Gettext');
-            $loader->alias('RC_Gettext',
-                'Royalcms\Component\Gettext\Facades\Gettext');
+            $loader->alias('RC_Gettext', 'Royalcms\Component\Gettext\Facades\Gettext');
+            $loader->alias('RC_Locale', 'Royalcms\Component\Gettext\Facades\Gettext');
         });
-
-        // Package commands
-        $this->royalcms->bind('gettext.create', function ($royalcms) {
-            return new Commands\GettextCreate();
-        });
-        $this->royalcms->bind('gettext.update', function ($royalcms) {
-            return new Commands\GettextUpdate();
-        });
-        $this->commands(array(
-            'gettext.create',
-            'gettext.update',
-        ));
     }
 
     /**
@@ -79,5 +51,23 @@ class LaravelGettextServiceProvider extends ServiceProvider
     {
         return array('gettext');
     }
-}
 
+    /**
+     * Get a list of files that should be compiled for the package.
+     *
+     * @return array
+     */
+    public static function compiles()
+    {
+        $dir = static::guessPackageClassPath('royalcms/gettext');
+
+        return [
+            $dir . "/Facades/Gettext.php",
+            $dir . "/Locale.php",
+            $dir . "/TextdomainManager.php",
+            $dir . "/Gettext.php",
+            $dir . "/GettextServiceProvider.php",
+            $dir . "/Translations/NoopTranslations.php",
+        ];
+    }
+}
