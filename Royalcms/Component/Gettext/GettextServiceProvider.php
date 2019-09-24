@@ -35,6 +35,15 @@ class GettextServiceProvider extends ServiceProvider
             return new Gettext($royalcms, $textdomain);
         });
 
+        // Load the alias
+        $this->loadAlias();
+    }
+
+    /**
+     * Load the alias = One less install step for the user
+     */
+    protected function loadAlias()
+    {
         $this->royalcms->booting(function () {
             $loader = \Royalcms\Component\Foundation\AliasLoader::getInstance();
             $loader->alias('RC_Gettext', 'Royalcms\Component\Gettext\Facades\Gettext');
