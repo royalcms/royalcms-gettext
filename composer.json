@@ -25,6 +25,14 @@
     "extra": {
         "branch-alias": {
             "dev-master": "5.0-dev"
+        },
+        "royalcms": {
+            "providers": [
+                "Royalcms\\Component\\Gettext\\GettextServiceProvider"
+            ],
+            "aliases": {
+                "RC_Gettext": "Royalcms\\Component\\Gettext\\Facades\\Gettext"
+            }
         }
     },
     "minimum-stability": "dev"
